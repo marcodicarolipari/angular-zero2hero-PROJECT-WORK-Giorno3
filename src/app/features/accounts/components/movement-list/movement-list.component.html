@@ -1,0 +1,126 @@
+<!-- movement-list.component.html -->
+<section class="movements">
+  <header class="movements__header">
+    <h2>Movimenti conto</h2>
+
+    <!-- Filtri: aggiornano il signal locale filter -->
+    <nav class="movements__filters" aria-label="Filtra movimenti">
+      <button
+        type="button"
+        [class.active]="filter() === 'ALL'"
+        (click)="onFilterChange('ALL')"
+      >
+        Tutti
+      </button>
+      <button
+        type="button"
+        [class.active]="filter() === 'CREDIT'"
+        (click)="onFilterChange('CREDIT')"
+      >
+        ↑ Entrate
+      </button>
+      <button
+        type="button"
+        [class.active]="filter() === 'DEBIT'"
+        (click)="onFilterChange('DEBIT')"
+      >
+        ↓ Uscite
+      </button>
+    </nav>
+
+    <input
+      type="search"
+      class="movements__search"
+      placeholder="Cerca"
+      aria-label="Cerca nei movimenti"
+      [value]="searchText()"
+      (input)="onSearch($event)"
+    />
+  </header>
+
+  <!-- LIVELLO 1: @if/@else if/@else — gestione stati UI principali -->
+  <!-- isLoading() con parentesi: è un signal input, si legge come Signal -->
+  @if (isLoading()) {
+    <div class="movements__state">
+      <span class="spinner" aria-label="Caricamento in corso"></span>
+      <p>Caricamento movimenti...</p>
+    </div>
+  } @else if (error()) {
+    <!-- error() con parentesi: signal input -->
+    <p class="movements__state movements__state--error" role="alert">
+      ⚠ Errore nel caricamento: {{ error() }}
+    </p>
+  } @else {
+    <!-- LIVELLO 2: @for con track OBBLIGATORIO e @empty integrato -->
+    <!-- #listContainer: template ref per viewChild del padre/componente stesso -->
+    <ul class="movements__list" #listContainer>
+      @for (movement of filteredMovements(); track movement.id) {
+        <li
+          class="movements__row"
+          (click)="onSelect(movement)"
+          tabindex="0"
+          (keydown.enter)="onSelect(movement)"
+        >
+          <!-- Data con DatePipe: 'dd/MM/yyyy' → "15/11/2024" -->
+          <span class="date">{{ movement.date | date: "dd/MM/yyyy" }}</span>
+
+          <!-- LIVELLO 3: @switch per il badge tipo movimento -->
+          <!-- Nota: i case sono UPPERCASE perché MovementType = 'CREDIT' | 'DEBIT' -->
+          <!-- Bug comune: scrivere @case ('credit') minuscolo — non matcha mai -->
+          @switch (movement.type) {
+            @case ("CREDIT") {
+              <span class="badge badge--credit" aria-label="Entrata"
+                >↑ Entrata</span
+              >
+            }
+            @case ("DEBIT") {
+              <span class="badge badge--debit" aria-label="Uscita"
+                >↓ Uscita</span
+              >
+            }
+            @default {
+              <span class="badge" aria-label="Tipo non noto">—</span>
+            }
+          }
+
+          <span class="description">{{ movement.description }}</span>
+
+          <!-- BankCurrencyPipe: formatta l'importo in EUR con localizzazione it-IT -->
+          <span
+            class="amount"
+            [class.credit]="movement.type === 'CREDIT'"
+            [class.debit]="movement.type === 'DEBIT'"
+          >
+            {{ movement.amount | bankCurrency: "EUR" }}
+          </span>
+
+          <span class="balance">{{
+            movement.balanceAfter | bankCurrency: "EUR"
+          }}</span>
+        </li>
+      } @empty {
+        <!-- @empty: mostrato SOLO quando filteredMovements() restituisce array vuoto -->
+        <li class="movements__empty">
+          @if (searchText().trim()) {
+            <p>Nessun risultato per la ricerca</p>
+          } @else {
+            <p>Nessun movimento corrisponde al filtro "{{ filter() }}".</p>
+          }
+          <button type="button" (click)="onFilterChange('ALL')">
+            Mostra tutti
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- Footer con conteggio — visibile solo quando ci sono movimenti -->
+  @if (!isLoading() && !error()) {
+    <footer class="movements__footer">
+      {{ filteredMovements().length }} movimento/i
+      @if (filter() !== "ALL") {
+        · filtro attivo: {{ filter() }}
+      }
+    </footer>
+  }
+</section>

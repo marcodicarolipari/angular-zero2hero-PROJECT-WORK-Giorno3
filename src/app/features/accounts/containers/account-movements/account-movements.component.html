@@ -1,0 +1,54 @@
+<!-- account-movements.component.html -->
+<div class="account-container">
+
+  <!-- Il figlio riceve SOLO dati e callback — non conosce il resto dell'app -->
+  <!-- [movements]="movements()" — property binding: passa il valore del signal -->
+  <!-- (movementSelected) — event binding: ascolta l'output del figlio -->
+  <app-movement-list
+    [movements]="movements()"
+    [isLoading]="isLoading()"
+    [error]="error()"
+    (movementSelected)="onMovementSelected($event)">
+  </app-movement-list>
+
+  <!-- Pannello dettaglio — gestito SOLO dal padre, il figlio non lo conosce -->
+  @if (selectedMovement()) {
+    <aside class="movement-detail" aria-label="Dettaglio movimento selezionato">
+      <header class="movement-detail__header">
+        <h3>Dettaglio Movimento</h3>
+        <!-- button per chiudere il dettaglio — il padre gestisce selectedMovement -->
+        <button type="button" (click)="selectedMovement.set(null)"
+                aria-label="Chiudi dettaglio">✕</button>
+      </header>
+
+      <dl class="movement-detail__data">
+        <dt>Data</dt>
+        <dd>{{ selectedMovement()!.date | date:'dd MMMM yyyy, HH:mm':'' }}</dd>
+
+        <dt>Descrizione</dt>
+        <dd>{{ selectedMovement()!.description }}</dd>
+
+        <dt>Importo</dt>
+        <dd [class.credit]="selectedMovement()!.type === 'CREDIT'"
+            [class.debit]="selectedMovement()!.type === 'DEBIT'">
+          {{ selectedMovement()!.amount | bankCurrency:'EUR' }}
+        </dd>
+
+        <dt>Saldo dopo operazione</dt>
+        <dd>{{ selectedMovement()!.balanceAfter | bankCurrency:'EUR' }}</dd>
+      </dl>
+    </aside>
+  } @else {
+    <aside class="movement-detail movement-detail--empty">
+      <p>Seleziona un movimento per vedere il dettaglio</p>
+    </aside>
+  }
+
+  <!-- Azioni del padre — il figlio non sa che esistono -->
+  <div class="account-actions">
+    <button type="button" class="btn-reload" (click)="reload()"
+            [disabled]="isLoading()">
+      @if (isLoading()) { Caricamento... } @else { ↺ Aggiorna }
+    </button>
+  </div>
+</div>

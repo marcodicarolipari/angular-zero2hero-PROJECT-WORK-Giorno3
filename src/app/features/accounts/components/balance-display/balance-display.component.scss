@@ -1,0 +1,13 @@
+.card {
+  max-width: 360px;
+  padding: 1rem 1.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+
+  &__name { margin: 0 0 0.5rem; }
+  &__balance { font-size: 1.8rem; font-weight: 600; margin: 0; color: #1b7f3b; }
+  &__balance--negative { color: #c62828; }
+  &__badge { color: #c62828; font-size: 0.85rem; }
+  &__update { color: #666; font-size: 0.85rem; }
+}

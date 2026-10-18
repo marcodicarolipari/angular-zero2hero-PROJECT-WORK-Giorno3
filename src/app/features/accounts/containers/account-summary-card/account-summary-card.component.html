@@ -1,0 +1,7 @@
+<app-balance-display
+  [accountName]="summary().name"
+  [balance]="summary().balance"
+  [lastUpdate]="summary().lastUpdate"
+  (refreshRequested)="onRefreshRequested()"
+/>
+<p>Saldo disponibile: {{ summary().balance | bankCurrency }}</p>
